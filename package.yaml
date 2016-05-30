@@ -1,0 +1,28 @@
+name: servant-spike
+version: 0.0.0
+synopsis: Testing servant library.
+maintainer: Tyler Olson
+license: MIT
+github: tgolson/servant-spike
+category: Development
+
+ghc-options: -Wall
+
+default-extensions:
+  - OverloadedStrings
+
+dependencies:
+  - base >= 4.7 && < 5
+  - servant
+
+library:
+  source-dirs: src/lib
+  exposed-modules:
+    - Server
+
+executables:
+  server:
+    main: Main.hs
+    source-dirs: src/servant-spike
+    dependencies:
+      - servant-spike
