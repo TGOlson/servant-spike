@@ -2,11 +2,9 @@ module Server
     ( main
     ) where
 
-import Control.Monad.Except
-import Control.Monad.Reader
-import Control.Monad.State
+import Control.Concurrent.STM
+import Data.List
 import Data.Proxy
-import Servant hiding (Handler)
 import qualified Servant
 import Network.Wai
 import Network.Wai.Handler.Warp
@@ -14,37 +12,30 @@ import Network.Wai.Handler.Warp
 import Server.API
 import Server.Types
 
-data ServerState = ServerState { serverDataStore :: State () [Note] }
 
 main :: IO ()
-main = run 8000 app
+main = do
+    st <- ServerState <$> makeServerDataStore
+    run 8000 (app st)
 
-app :: Application
-app = Servant.serve (Proxy :: Proxy API) server
 
-toServantHandler' :: forall a. ServerState -> Handler a -> Servant.Handler a
-toServantHandler' = flip runReaderT
+app :: ServerState -> Application
+app st = Servant.serve (Proxy :: Proxy API) (server st)
 
-server :: Servant.Server API
-server = Servant.enter toServantHandler serverH
-  where
-    toServantHandler = Nat (toServantHandler' initialState)
-    initialState = ServerState (return [])
-    serverH =    getNotes
-            :<|> getNotesWithSearch
-            :<|> getNote
-            :<|> createNote
 
-type Handler a = ReaderT ServerState (ExceptT Servant.ServantErr IO) a
+makeServerDataStore :: IO ServerDataStore
+makeServerDataStore = do
+    var <- newTVarIO
+        [ Note 1 "Hello"
+        , Note 2 "Hello Again!"
+        , Note 3 "Foo"
+        ]
 
-getNotes :: Handler [Note]
-getNotes = undefined
+    let findNote i = find ((==) i . nId)
+        sdsGet = atomically $ readTVar var
+        sdsFind nId = findNote nId <$> sdsGet
+        sdsPut note = atomically . modifyTVar var $ \notes ->
+            maybe (note:notes) (const notes) (findNote (nId note) notes)
+        sdsRemove i = atomically . modifyTVar var $ filter ((/=) i . nId)
 
-getNotesWithSearch :: Maybe String -> Handler [Note]
-getNotesWithSearch = undefined
-
-getNote :: Int -> Handler Note
-getNote = undefined
-
-createNote :: Note -> Handler ()
-createNote = undefined
+    return ServerDataStore{..}

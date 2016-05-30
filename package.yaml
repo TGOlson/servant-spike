@@ -14,14 +14,18 @@ default-extensions:
   - DeriveGeneric
   - TypeOperators
   - RankNTypes
+  - RecordWildCards
+  - LambdaCase
 
 dependencies:
   - base >= 4.7 && < 5
   - servant-server
   - aeson
+  - extra
   - wai
   - warp
   - mtl
+  - stm
 
 library:
   source-dirs: src/lib
