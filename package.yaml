@@ -23,9 +23,11 @@ dependencies:
   - aeson
   - extra
   - wai
+  - wai-extra
   - warp
   - mtl
   - stm
+  - safe
 
 library:
   source-dirs: src/lib

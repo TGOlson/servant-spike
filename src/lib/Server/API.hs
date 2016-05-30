@@ -7,6 +7,7 @@ import Control.Monad.Except
 import Control.Monad.Reader
 import Data.List
 import Servant hiding (Handler)
+import Safe
 
 import Server.Types
 
@@ -50,7 +51,8 @@ createNote (NewNote n) = do
     store <- serverDataStore <$> ask
 
     notes <- liftIO (sdsGet store)
-    let note = Note (length notes) n
+    let i = maybe 0 (succ . nId) (headMay notes)
+        note = Note i n
     liftIO (sdsPut store note)
 
     return note

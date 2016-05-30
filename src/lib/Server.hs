@@ -8,6 +8,7 @@ import Data.Proxy
 import qualified Servant
 import Network.Wai
 import Network.Wai.Handler.Warp
+import Network.Wai.Middleware.RequestLogger
 
 import Server.API
 import Server.Types
@@ -20,15 +21,15 @@ main = do
 
 
 app :: ServerState -> Application
-app st = Servant.serve (Proxy :: Proxy API) (server st)
+app st = logStdoutDev $ Servant.serve (Proxy :: Proxy API) (server st)
 
 
 makeServerDataStore :: IO ServerDataStore
 makeServerDataStore = do
     var <- newTVarIO
-        [ Note 1 "Hello"
+        [ Note 3 "Foo"
         , Note 2 "Hello Again!"
-        , Note 3 "Foo"
+        , Note 1 "Hello"
         ]
 
     let findNote i = find ((==) i . nId)
